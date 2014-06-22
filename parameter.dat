@@ -1,0 +1,5 @@
+1, 1, 1, 1                              iglit, itrend, ifilt, iresp
+0.02                                    taper fraction (should be less than 0.5)
+4, 0.1, 50.                             norder, flcut, fhcut
+0.1, 50., 200, 5.                       freq1, freq2, nfreq, damp
+1, 1.5                                  ismooth, fbox

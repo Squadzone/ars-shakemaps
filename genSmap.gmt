@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# GMT Script to generate shakemap tiles to be overlayed on top of google maps
+# 4 arguments passed in are the lat lon bounts for the tile.
+#
+
+# Make a base coast map for the region 
+# pscoast -R$1/$2/$3/$4 -JM1i -Df -G0/0/0 -X0 -Y0 -P -K > temp.ps
+pscoast -R$1/$2/$3/$4 -Df -JM8i -G0/0/0 -X0 -Y0 -P -K > temp.ps
+
+# Start clipping, using coastlines as the boundary.
+pscoast -R -Df -J -Gc -P -O -K >> temp.ps
+
+# Make data gird with estimated ground motions
+#xyz2grd shake.xyz -Gshake.grd -R$1/$2/$3/$4 -I.05/.05
+#surface shake.xyz -Gshake.grd -R$1/$2/$3/$4 -I.001
+surface shake.xyz -Gshake.grd -R$1/$2/$3/$4 -I$5
+
+# Plot the motion data
+# grdimage shake.grd -Cshake.cpt -R -J -P -E300 -O -K >> temp.ps
+grdimage shake.grd -Cshake.cpt -R -J -P -O -K >> temp.ps
+
+
+# End clipping
+pscoast -R -J -P -O -K -Q >> temp.ps
+
+# The final step is to crop the PS file, and convert into PNG, and the 
+# tight bounding box for crop is estimated by gs (automagic). If there 
+# is water on the vertex, the crop will be smaller than what we would like. 
+# The following lines paints circles at the vetices of our plot, to force 
+# the correct crop.
+echo $2 $4 | psxy -R -J -Sc0.05c -Gblue -O -K >> temp.ps
+echo $1 $4 | psxy -R -J -Sc0.05c -Gblue -O -K >> temp.ps
+echo $2 $3 | psxy -R -J -Sc0.05c -Gblue -O >> temp.ps
+
+# Make the PNG and cleanup
+# -A to make it to select the tightest bounding box
+ps2raster temp.ps -A -TG
+
+rm -f temp.ps
